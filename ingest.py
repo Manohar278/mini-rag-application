@@ -1,9 +1,15 @@
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
-from pinecone_utils import get_index
+from pinecone import Pinecone
+import os
 import uuid
 
+# Embedding model
 model = SentenceTransformer("all-MiniLM-L6-v2")
+
+# Pinecone connection (simple)
+pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+index = pc.Index("mini-rag-index")   # ⚠️ index MUST already exist
 
 def ingest_pdf(pdf_path):
     reader = PdfReader(pdf_path)
@@ -14,6 +20,7 @@ def ingest_pdf(pdf_path):
         if page_text:
             text += page_text
 
+    # Chunking
     chunks = []
     chunk_size = 500
     overlap = 50
@@ -24,8 +31,7 @@ def ingest_pdf(pdf_path):
         chunks.append(text[start:end])
         start = end - overlap
 
-    index = get_index()
-
+    # Embed + upload
     vectors = []
     for chunk in chunks:
         vectors.append({
