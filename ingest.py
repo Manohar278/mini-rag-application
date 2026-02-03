@@ -11,7 +11,7 @@ load_dotenv()
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Pinecone connection (index MUST already exist)
-pc = Pinecone(api_key=os.environ["pcsk_7N8TDx_T7CDM66rqR9VvwPRVHfCZd1iJejAdNkA1VStAXXRCcnZeRBcWMibb5pHyXCBfSk"])
+pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
 index = pc.Index("mini-rag")
 
 def ingest_pdf(pdf_path: str):
