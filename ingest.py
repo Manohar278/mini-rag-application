@@ -1,30 +1,37 @@
-import os
-from pinecone import Pinecone, ServerlessSpec
-from dotenv import load_dotenv
+from pypdf import PdfReader
+from sentence_transformers import SentenceTransformer
+from pinecone_utils import get_index
+import uuid
 
-load_dotenv()
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
-INDEX_NAME = "mini-rag"
+def ingest_pdf(pdf_path):
+    reader = PdfReader(pdf_path)
+    text = ""
 
-def get_index():
-    api_key = os.getenv("PINECONE_API_KEY")
+    for page in reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text
 
-    if not api_key:
-        raise RuntimeError("PINECONE_API_KEY is not set")
+    chunks = []
+    chunk_size = 500
+    overlap = 50
+    start = 0
 
-    pc = Pinecone(api_key=api_key)
+    while start < len(text):
+        end = start + chunk_size
+        chunks.append(text[start:end])
+        start = end - overlap
 
-    existing_indexes = [i["name"] for i in pc.list_indexes()]
+    index = get_index()
 
-    if INDEX_NAME not in existing_indexes:
-        pc.create_index(
-            name=INDEX_NAME,
-            dimension=384,
-            metric="cosine",
-            spec=ServerlessSpec(
-                cloud="aws",
-                region="us-east-1"
-            )
-        )
+    vectors = []
+    for chunk in chunks:
+        vectors.append({
+            "id": str(uuid.uuid4()),
+            "values": model.encode(chunk).tolist(),
+            "metadata": {"text": chunk}
+        })
 
-    return pc.Index(INDEX_NAME)
+    index.upsert(vectors)
