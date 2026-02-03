@@ -5,7 +5,9 @@ from rag import retrieve, rerank, answer
 st.set_page_config(page_title="Mini RAG AI Application")
 
 st.title("📄 Mini RAG AI Application")
+st.write("Upload a document and ask questions based on its content.")
 
+# Upload PDF
 uploaded_file = st.file_uploader("Upload PDF", type=["pdf"])
 
 if uploaded_file:
@@ -14,17 +16,21 @@ if uploaded_file:
 
     if st.button("Ingest Document"):
         ingest_pdf("temp.pdf")
-        st.success("Document ingested successfully")
+        st.success("✅ Document ingested successfully")
 
+# Ask question
 question = st.text_input("Ask a question")
 
 if st.button("Get Answer"):
-    matches = retrieve(question)
-    ranked = rerank(question, matches)
-    final_answer, context = answer(question, ranked)
+    if question.strip() == "":
+        st.warning("Please enter a question.")
+    else:
+        matches = retrieve(question)
+        ranked = rerank(question, matches)
+        final_answer, context = answer(question, ranked)
 
-    st.subheader("Answer")
-    st.write(final_answer)
+        st.subheader("Answer")
+        st.write(final_answer)
 
-    st.subheader("Sources")
-    st.text(context)
+        st.subheader("Sources")
+        st.text(context)
