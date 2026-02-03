@@ -1,10 +1,30 @@
 import os
-from pinecone import Pinecone
-from sentence_transformers import SentenceTransformer
+from pinecone import Pinecone, ServerlessSpec
+from dotenv import load_dotenv
 
-embed_model = SentenceTransformer("all-MiniLM-L6-v2")
+load_dotenv()
 
-def ingest_pdf(pdf_path):
-    pc = Pinecone(api_key=os.environ["pcsk_7N8TDx_T7CDM66rqR9VvwPRVHfCZd1iJejAdNkA1VStAXXRCcnZeRBcWMibb5pHyXCBfSk"])
-    index = pc.Index("mini-rag")
-    # continue ingestion logic
+INDEX_NAME = "mini-rag"
+
+def get_index():
+    api_key = os.getenv("PINECONE_API_KEY")
+
+    if not api_key:
+        raise RuntimeError("PINECONE_API_KEY is not set")
+
+    pc = Pinecone(api_key=api_key)
+
+    existing_indexes = [i["name"] for i in pc.list_indexes()]
+
+    if INDEX_NAME not in existing_indexes:
+        pc.create_index(
+            name=INDEX_NAME,
+            dimension=384,
+            metric="cosine",
+            spec=ServerlessSpec(
+                cloud="aws",
+                region="us-east-1"
+            )
+        )
+
+    return pc.Index(INDEX_NAME)
