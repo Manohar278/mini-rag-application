@@ -1,20 +1,23 @@
+import os
+import uuid
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
-import os
-import uuid
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Embedding model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-# Pinecone connection (simple)
+# Pinecone connection (index MUST already exist)
 pc = Pinecone(api_key=os.environ["pcsk_7N8TDx_T7CDM66rqR9VvwPRVHfCZd1iJejAdNkA1VStAXXRCcnZeRBcWMibb5pHyXCBfSk"])
-index = pc.Index("mini-rag")   # ⚠️ index MUST already exist
+index = pc.Index("mini-rag")
 
-def ingest_pdf(pdf_path):
+def ingest_pdf(pdf_path: str):
     reader = PdfReader(pdf_path)
-    text = ""
 
+    text = ""
     for page in reader.pages:
         page_text = page.extract_text()
         if page_text:
@@ -31,7 +34,7 @@ def ingest_pdf(pdf_path):
         chunks.append(text[start:end])
         start = end - overlap
 
-    # Embed + upload
+    # Embed + upsert
     vectors = []
     for chunk in chunks:
         vectors.append({
