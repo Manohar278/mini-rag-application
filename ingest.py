@@ -8,8 +8,8 @@ import uuid
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
 # Pinecone connection (simple)
-pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
-index = pc.Index("mini-rag-index")   # ⚠️ index MUST already exist
+pc = Pinecone(api_key=os.environ["pcsk_7N8TDx_T7CDM66rqR9VvwPRVHfCZd1iJejAdNkA1VStAXXRCcnZeRBcWMibb5pHyXCBfSk"])
+index = pc.Index("mini-rag")   # ⚠️ index MUST already exist
 
 def ingest_pdf(pdf_path):
     reader = PdfReader(pdf_path)
