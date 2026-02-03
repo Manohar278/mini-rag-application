@@ -1,14 +1,21 @@
+import os
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from transformers import pipeline
-from pinecone_utils import get_index
+from pinecone import Pinecone
+from dotenv import load_dotenv
 
+load_dotenv()
+
+# Models
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 reranker = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
 llm = pipeline("text-generation", model="distilgpt2")
 
-def retrieve(query, top_k=5):
-    index = get_index()
+# Pinecone connection (index MUST already exist)
+pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+index = pc.Index("mini-rag")
 
+def retrieve(query, top_k=5):
     query_vector = embedding_model.encode(query).tolist()
 
     results = index.query(
